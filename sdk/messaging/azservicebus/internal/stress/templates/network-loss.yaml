@@ -1,0 +1,21 @@
+{{- include "stress-test-addons.chaos-wrapper.tpl" (list . "stress.azservicebus-network") -}}
+{{- define "stress.azservicebus-network" -}}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+spec:
+  action: loss
+  direction: to
+  externalTargets:
+    - "{{ .Stress.ResourceGroupName }}.servicebus.windows.net"
+  mode: one
+  selector:
+    labelSelectors:
+      # Maps to the test pod, provided it also sets a testInstance label of {{ .Stress.ResourceGroupName }}
+      testInstance: {{ .Stress.ResourceGroupName }}
+      chaos: "true"
+    namespaces:
+      - {{ .Release.Namespace }}
+  loss:
+    loss: "100"
+    correlation: "100"
+{{- end -}}

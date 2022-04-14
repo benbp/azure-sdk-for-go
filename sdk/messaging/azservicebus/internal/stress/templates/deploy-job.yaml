@@ -3,6 +3,8 @@
 metadata:
   labels:
     testName: "go-servicebus"
+    chaos: "true"
+    testInstance: {{ .Stress.ResourceGroupName }}
 spec:
   # uncomment to deploy to the southeastasia region.
   # nodeSelector:
@@ -13,9 +15,9 @@ spec:
       image:  {{ .Values.image }}
       command: ['/app/stress']
       imagePullPolicy: Always
-      args: 
+      args:
       - "tests"
       # (this is injected automatically. The full list of scenarios is in `../values.yaml`)
-      - {{ .Scenario }}
+      - {{ .Stress.Scenario }}
       {{- include "stress-test-addons.container-env" . | nindent 6 }}
 {{- end -}}
