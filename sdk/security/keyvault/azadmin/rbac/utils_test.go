@@ -41,7 +41,13 @@ func TestMain(m *testing.M) {
 		hsmURL = fakeHsmURL
 	}
 
-	err := recording.ResetProxy(nil)
+    proxyCmd, err := recording.StartTestProxyInstance(nil)
+	if err != nil {
+        recording.StopTestProxyInstance(proxyCmd, nil)
+		panic(err)
+	}
+
+	err = recording.ResetProxy(nil)
 	if err != nil {
 		panic(err)
 	}
@@ -69,6 +75,12 @@ func TestMain(m *testing.M) {
 		}()
 	}
 	code := m.Run()
+
+    err = recording.StopTestProxyInstance(proxyCmd, nil)
+    if err != nil {
+        panic("WARNING: Failed to stop test proxy instance: " + err.Error())
+    }
+
 	os.Exit(code)
 }
 
