@@ -25,6 +25,8 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+const packagePath = "sdk/internal/recording/testdata"
+
 type recordingTests struct {
 	suite.Suite
 	proxyCmd *exec.Cmd
@@ -414,8 +416,6 @@ func (s *recordingTests) TestRecordingOptions() {
 	// ProxyPort should be generated deterministically
 	require.Equal(r.ProxyPort, defaultOptions().ProxyPort)
 }
-
-var packagePath = "sdk/internal/recording/testdata"
 
 func (s *recordingTests) TestStartStop() {
 	require := require.New(s.T())

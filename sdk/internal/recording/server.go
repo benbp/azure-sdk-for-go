@@ -48,7 +48,7 @@ func extractTestProxyZip(archivePath string, outputDir string) error {
     // Open the zip file
     r, err := zip.OpenReader(archivePath)
     if err != nil {
-        panic(err)
+        return err
     }
     defer r.Close()
 
