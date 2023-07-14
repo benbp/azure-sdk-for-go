@@ -158,8 +158,8 @@ func ensureTestProxyInstalled(proxyVersion string, proxyPath string, proxyDir st
 		// Therefore, if ctrl-c is pressed during download, the user will have to manually
 		// remove the lockfile in order to get the tests running again.
 		defer func() {
-			os.Remove(lockFile)
 			lock.Close()
+			os.Remove(lockFile)
 		}()
 
 		break
