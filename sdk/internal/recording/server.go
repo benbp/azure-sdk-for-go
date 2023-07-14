@@ -25,6 +25,7 @@ import (
 )
 
 func getTestProxyDownloadFile() (string, error) {
+	// No ARM binaries for Windows, so return x64
 	if runtime.GOOS == "windows" {
 		return "test-proxy-standalone-win-x64.zip", nil
 	}
