@@ -43,14 +43,14 @@ func (s *recordingTests) SetupSuite() {
 }
 
 func (s *recordingTests) TearDownSuite() {
+	StopTestProxyInstance(s.proxyCmd, nil)
+
 	files, err := filepath.Glob("recordings/**/*.yaml")
 	require.NoError(s.T(), err)
 	for _, f := range files {
 		err := os.Remove(f)
 		require.NoError(s.T(), err)
 	}
-
-	StopTestProxyInstance(s.proxyCmd, nil)
 }
 
 func (s *recordingTests) TestInitializeRecording() {

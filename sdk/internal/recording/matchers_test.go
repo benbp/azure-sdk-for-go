@@ -9,6 +9,7 @@ package recording
 import (
 	"bytes"
 	"net/http"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -33,6 +34,9 @@ func (s *matchersTests) SetupSuite() {
 
 func (s *matchersTests) TearDownSuite() {
 	StopTestProxyInstance(s.proxyCmd, nil)
+
+	err := os.RemoveAll("./testdata/recordings/TestMatchers/")
+	require.NoError(s.T(), err)
 }
 
 func (s *matchersTests) TestSetBodilessMatcher() {

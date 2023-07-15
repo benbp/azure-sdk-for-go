@@ -45,11 +45,10 @@ func (s *sanitizerTests) SetupSuite() {
 }
 
 func (s *sanitizerTests) TearDownSuite() {
-	require := require.New(s.T())
 	StopTestProxyInstance(s.proxyCmd, nil)
 	// cleanup test files
 	err := os.RemoveAll("testfiles")
-	require.NoError(err)
+	require.NoError(s.T(), err)
 }
 
 func (s *sanitizerTests) TestDefaultSanitizerSanitizesAuthHeader() {
