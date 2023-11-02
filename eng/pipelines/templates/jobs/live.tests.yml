@@ -45,10 +45,13 @@ jobs:
       - template: /eng/pipelines/templates/variables/globals.yml
       - name: ArmTemplateParameters
         value: '@{}'
+      - name: Demands
+        value: ''
 
     pool:
       name: $(Pool)
       vmImage: $(OSVmImage)
+      demands: $(Demands)
 
     timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
 

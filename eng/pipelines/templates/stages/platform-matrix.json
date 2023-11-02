@@ -15,5 +15,11 @@
       "1.20.7",
       "1.21.0"
     ]
+  },
+  "include": {
+    "OSVmImage": "MMSUbuntu20.04",
+    "Pool": "azsdk-pool-mms-ubuntu-2004-general",
+    "GoVersion": "1.20.7",
+    "Demands": "HoldMachine -equals true"
   }
 }
