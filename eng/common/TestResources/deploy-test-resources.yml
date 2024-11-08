@@ -108,7 +108,6 @@ steps:
     - task: AzureCLI@2
       displayName: Hack override for HSM deployment
       env:
-        ARM_OIDC_TOKEN: $(ARM_OIDC_TOKEN)
         AZURE_MANAGEDHSM_URL: $(AZURE_MANAGEDHSM_URL)
       inputs:
         azureSubscription: ${{ parameters.ServiceConnection }}
@@ -121,16 +120,13 @@ steps:
             ${{ parameters.SubscriptionConfiguration }}
           '@ | ConvertFrom-Json -AsHashtable;
 
-          $context = Get-AzContext
-          $subscriptionConfiguration["Environment"] = $context.Environment.Name
-          $subscriptionConfiguration["SubscriptionId"] = $context.Subscription.Id
-          $subscriptionConfiguration["TenantId"] = $context.Subscription.TenantId
-          $subscriptionConfiguration["TestApplicationId"] = $context.Account.Id
-          $subscriptionConfiguration["ProvisionerApplicationId"] = $context.Account.Id
+          $subscriptionConfiguration["Environment"] = "AzureCloud"
+          $subscriptionConfiguration["SubscriptionId"] = "4d042dc6-fe17-4698-a23f-ec6a8d1e98f4"
+          $subscriptionConfiguration["TenantId"] = "70a036f6-8e4d-4615-bad6-149c02e7720d"
+          $subscriptionConfiguration["TestApplicationId"] = "c09e067d-2c90-4366-84e5-e21e5db00da5"
+          $subscriptionConfiguration["TestApplicationOid"] = "26ffb325-f480-419c-b7a9-2c8a018203a8"
 
-          $principal = Get-AzADServicePrincipal -ApplicationId $context.Account.Id
-          $subscriptionConfiguration["TestApplicationOid"] = $principal.Id
-          $subscriptionConfiguration["ProvisionerApplicationOid"] = $principal.Id
+          $env:ARM_OIDC_TOKEN = $env:idToken
 
           sdk/security/keyvault/azadmin/test-resources-post-hack.ps1 @subscriptionConfiguration
 
