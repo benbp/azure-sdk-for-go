@@ -104,6 +104,37 @@ steps:
             -Force `
             -Verbose | Out-Null
 
+  - ${{ if eq(parameters.PersistOidcToken, true) }}:
+    - task: AzureCLI@2
+      displayName: Hack override for HSM deployment
+      env:
+        ARM_OIDC_TOKEN: $(ARM_OIDC_TOKEN)
+        AZURE_MANAGEDHSM_URL: $(AZURE_MANAGEDHSM_URL)
+      inputs:
+        azureSubscription: ${{ parameters.ServiceConnection }}
+        addSpnToEnvironment: true
+        scriptLocation: inlineScript
+        scriptType: pscore
+        inlineScript: |
+          eng/common/scripts/Import-AzModules.ps1
+          $subscriptionConfiguration = @'
+            ${{ parameters.SubscriptionConfiguration }}
+          '@ | ConvertFrom-Json -AsHashtable;
+
+          $context = Get-AzContext
+          $subscriptionConfiguration["Environment"] = $context.Environment.Name
+          $subscriptionConfiguration["SubscriptionId"] = $context.Subscription.Id
+          $subscriptionConfiguration["TenantId"] = $context.Subscription.TenantId
+          $subscriptionConfiguration["TestApplicationId"] = $context.Account.Id
+          $subscriptionConfiguration["ProvisionerApplicationId"] = $context.Account.Id
+
+          $principal = Get-AzADServicePrincipal -ApplicationId $context.Account.Id
+          $subscriptionConfiguration["TestApplicationOid"] = $principal.Id
+          $subscriptionConfiguration["ProvisionerApplicationOid"] = $principal.Id
+
+          sdk/security/keyvault/azadmin/test-resources-post-hack.ps1 @subscriptionConfiguration
+
+
   - ${{ else }}:
     - pwsh: |
         eng/common/scripts/Import-AzModules.ps1

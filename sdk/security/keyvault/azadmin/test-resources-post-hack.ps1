@@ -12,9 +12,6 @@ using namespace System.Security.Cryptography.X509Certificates
 # Use same parameter names as declared in eng/New-TestResources.ps1 (assume validation therein).
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param (
-    [Parameter()]
-    [hashtable] $DeploymentOutputs,
-
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string] $SubscriptionId,
@@ -26,6 +23,10 @@ param (
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$')]
     [string] $TestApplicationId,
+
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$')]
+    [string] $TestApplicationOid,
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
@@ -84,12 +85,12 @@ $([Convert]::ToBase64String($Certificate.RawData, 'InsertLineBreaks'))
 }
 
 # Make sure we deployed a Managed HSM.
-if (!$DeploymentOutputs['AZURE_MANAGEDHSM_URL']) {
+if (!$env:AZURE_MANAGEDHSM_URL) {
     Log "Managed HSM not deployed; skipping activation"
     exit
 }
 
-[Uri] $hsmUrl = $DeploymentOutputs['AZURE_MANAGEDHSM_URL']
+[Uri] $hsmUrl = $env:AZURE_MANAGEDHSM_URL
 $hsmName = $hsmUrl.Host.Substring(0, $hsmUrl.Host.IndexOf('.'))
 
 Log 'Creating 3 X509 certificates to activate security domain'
@@ -106,7 +107,9 @@ $wrappingFiles = foreach ($i in 0..2) {
 Log "Refreshing OIDC token"
 az cloud set -n $Environment
 az login --federated-token $env:ARM_OIDC_TOKEN --service-principal -t $TenantId -u $TestApplicationId
+if ($LASTEXITCODE) { exit $LASTEXITCODE }
 az account set --subscription $SubscriptionId
+if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
 Log "Downloading security domain from '$hsmUrl'"
 
@@ -118,9 +121,9 @@ if (Test-Path $sdpath) {
 
 az keyvault security-domain download `
     --hsm-name "$hsmName" `
-    --sd-wrappingkey-file "$wrappingFiles" `
+    --sd-wrapping-keys "$wrappingFiles" `
     --sd-quorum 2 `
-    --sd-file "$sdPath" `
+    --security-domain-file "$sdPath" `
     --verbose
 
 if ($LASTEXITCODE) {
@@ -135,19 +138,17 @@ Log "Security domain downloaded to '$sdPath'; Managed HSM is now active at '$hsm
 Log 'Sleeping for 30 seconds to allow activation to propagate...'
 Start-Sleep -Seconds 30
 
-$testApplicationOid = $DeploymentOutputs['CLIENT_OBJECTID']
-
-Log "Creating additional required role assignments for '$testApplicationOid'"
+Log "Creating additional required role assignments for '$TestApplicationOid'"
 az keyvault role assignment create `
     --hsm-name "$hsmName" `
     --role "Managed HSM Crypto Officer" `
-    --assignee-object-id "$testApplicationOid"
+    --assignee-object-id "$TestApplicationOid"
 if ($LASTEXITCODE) { exit $LASTEXITCODE }
 az keyvault role assignment create `
     --hsm-name "$hsmName" `
     --role "Managed HSM Crypto User" `
-    --assignee-object-id "$testApplicationOid"
+    --assignee-object-id "$TestApplicationOid"
 if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
 
-Log "Role assignments created for '$testApplicationOid'"
+Log "Role assignments created for '$TestApplicationOid'"
